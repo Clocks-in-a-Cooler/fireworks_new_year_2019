@@ -1,3 +1,8 @@
+//reload the page if the windows size changes
+window.onresize = (event) => {
+    document.location.reload(true);
+}
+
 //canvas and its context
 var canvas = document.querySelector("canvas");
 var ctxt   = canvas.getContext("2d");
@@ -28,6 +33,11 @@ function animate(time) {
     
     last_time = time;
     
+    if (last_time > next_time) {
+        entities.push(new Firework_rocket());
+        next_time = last_time + random_number(100, 200);
+    }
+    
     draw_frame(lapse);
     
     requestAnimationFrame(animate);
@@ -43,8 +53,6 @@ function draw_frame(lapse) {
         e.get_new_position(lapse);
         e.draw(ctxt);
     });
-    
-    entities.push(new Firework_rocket());
 }
 
 //initializer
@@ -52,33 +60,29 @@ function init() {
     canvas.width  = window.innerWidth;
     canvas.height = window.innerHeight;
     
-    calculate_initial_thrust(window.innerHeight);
+    calculate(window.innerHeight);
+    
     animate();
 }
 
-function calculate_initial_thrust(height) {
-    bottom_limit = height * 0.9;
-    top_limit    = height * 0.05;
+function calculate(height) {
+    bottom_limit = height * 0.85;
+    top_limit    = height * 0.15;
 }
 
-//misc stuff
-var gravity = 0;
+//variables and stuff
+var gravity = 0.005;
 var explode = 0.5;
 
 var thrust   = -0.05; //thrust has to be negative, since the fireworks are moving UP
 var friction = 0.025;
 
-var bottom_limit, top_limit, flyable_height;
-var f_lifetime = {
-    max: 500,
-    min: 250,
-};
-var init_v = {
-    max: 0,
-    min: 0,
-};
+var bottom_limit, top_limit;
 
 var entities = [];
+
+var fire_delay = random_number(750, 1250);
+var next_time  = 0;
 
 var background_colour = {r: 0, g: 0, b: 0}; //black
 var firework_colours = [
@@ -114,21 +118,14 @@ function get_colour(colour, alpha) {
 function Firework_rocket() {
     this.x = random_number(0, width);
     this.y = window.innerHeight;
-    this.r = 5;
-    this.a = Math.PI / 2;
+    this.r = 3;
+    this.a = -Math.PI / 2;
     
     this.active = true;
     
     this.max_height = random_number(bottom_limit, top_limit);
     
     this.colour = random_element(firework_colours);
-    
-    //tint the exhaust
-    this.exhaust_colour = {
-        r: Math.floor(this.colour.r / 5) + 200,
-        g: Math.floor(this.colour.g / 5) + 200,
-        b: Math.floor(this.colour.b / 5) + 200,
-    };
     
     this.v = { x: 0, y: 0, };
     
@@ -172,37 +169,86 @@ function Firework_rocket() {
     };
     
     this.explode = () => {
-        
+        entities.push(new Firework_particle(this.x, this.y, 0, this.colour));
+        entities.push(new Firework_particle(this.x, this.y, Math.PI / 4, this.colour));
+        entities.push(new Firework_particle(this.x, this.y, Math.PI / 2, this.colour));
+        entities.push(new Firework_particle(this.x, this.y, 3 * Math.PI / 4, this.colour));
+        entities.push(new Firework_particle(this.x, this.y, Math.PI, this.colour));
+        entities.push(new Firework_particle(this.x, this.y, 5 * Math.PI / 4, this.colour));
+        entities.push(new Firework_particle(this.x, this.y, 3 * Math.PI / 2, this.colour));
+        entities.push(new Firework_particle(this.x, this.y, 7 * Math.PI / 4, this.colour));
     };
 }
 
-function Rocket_exhaust_particle(x, y, a, colour) {
+/* function Rocket_exhaust_particle(x, y, a, colour) {
     this.x = x;
     this.y = y;
     this.a = Math.random() * (Math.PI / 9) + (a - Math.PI / 18);
-    this.s = 0.1; //s here is for speed
+    this.s = -0.1; //s here is for speed
     this.v = { x: Math.cos(this.a), y: Math.sin(this.a), };
     
     this.radius = random_number(1, 3);
+    this.colour = colour;
+    
+    this.lifetime     = 0;
+    this.max_lifetime = random_number(1250, 1500);
     
     this.active = true;
-    this.
     
     this.get_new_position = (lapse) => {
+        if (this.lifetime > this.max_lifetime) {
+            this.active = false;
+        } else {
+            this.lifetime += lapse;
+        }
         
+        this.x += this.v.x * this.s * lapse;
+        this.y += this.v.y * this.s * lapse;
     };
-}
+    
+    this.draw = (context) => {
+        var alpha = 1 - (this.lifetime / this.max_lifetime);
+        
+        context.fillStyle = get_colour(this.colour, alpha);
+        context.beginPath();
+        context.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+        context.fill();
+        context.closePath();
+    };
+} */
 
 //after the firework blows itself to pieces
-function Fireworks_particle(x, y, a, colour) {
+function Firework_particle(x, y, a, colour) {
     this.x = x;
     this.y = y;
-    this.a = a;
+    this.r = 2;
+    this.v = {x: Math.cos(a), y: Math.sin(a),};
     
     this.colour = colour;
     
-    this.max_lifetime = 1000;
+    this.max_lifetime = 500;
     
     this.lifetime = 0;
-    this.active   = false;
+    this.active   = true;
+    
+    this.get_new_position = (lapse) => {
+        if (this.lifetime > this.max_lifetime) {
+            this.active = false;
+        } else {
+            this.lifetime += lapse;
+        }
+        
+        this.v.y += gravity * lapse;
+        
+        this.x += this.v.x * lapse;
+        this.y += this.v.y * lapse;
+    };
+    
+    this.draw = (context) => {
+        context.fillStyle = get_colour(this.colour);
+        context.beginPath();
+        context.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+        context.fill();
+        context.closePath();
+    };
 }
