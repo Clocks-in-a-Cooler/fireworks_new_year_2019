@@ -129,6 +129,15 @@ var firework_colours = [
 ];
 var user_colour = {r: 240, g: 230, b: 130}; //khaki
 
+
+var explosion_sizes = ["small", "medium", "large", "extra large"];
+var explosion_angles = { //angles for each explosion size
+    "small": [ 0, Math.PI / 3, 2 * Math.PI / 3, Math.PI, 4 * Math.PI / 3, 5 * Math.PI / 3], //six
+    "medium": [ 0, Math.PI / 4, Math.PI / 2, 3 * Math.PI / 4, Math.PI, 5 * Math.PI / 4, 3 * Math.PI / 2, 7 * Math.PI / 4], //eight
+    "large": [0, Math.PI / 5, 2 * Math.PI / 5, 3 * Math.PI / 5, 4 * Math.PI / 5, Math.PI, 6 * Math.PI / 5, 7 * Math.PI / 5, 8 * Math.PI / 5, 9 * Math.PI / 5],//ten
+    "extra large": [0, Math.PI / 6, Math.PI / 3, Math.PI / 2, 2 * Math.PI / 3, 5 * Math.PI / 6, Math.PI, 7 * Math.PI / 6, 4 * Math.PI / 3, 3 * Math.PI / 2, 5 * Math.PI / 3, 11 * Math.PI / 6], //twelve
+};
+
 function get_colour(colour, alpha) {
     if (alpha == undefined) {
         return "rgb(" + colour.r + ", " + colour.g + ", " + colour.b + ")";
@@ -144,6 +153,8 @@ function Firework_rocket(x, y, colour) {
     this.y = y || window.innerHeight;
     this.r = 3;
     this.a = (5 * Math.PI / 9) - Math.random() * (Math.PI / 9);
+    
+    this.explosion_size = random_element(explosion_sizes);
     
     this.active = true;
     
@@ -193,6 +204,7 @@ function Firework_rocket(x, y, colour) {
     };
     
     this.explode = () => {
+        /*
         entities.push(new Firework_particle(this.x, this.y, 0, this.colour));
         entities.push(new Firework_particle(this.x, this.y, Math.PI / 4, this.colour));
         entities.push(new Firework_particle(this.x, this.y, Math.PI / 2, this.colour));
@@ -200,12 +212,16 @@ function Firework_rocket(x, y, colour) {
         entities.push(new Firework_particle(this.x, this.y, Math.PI, this.colour));
         entities.push(new Firework_particle(this.x, this.y, 5 * Math.PI / 4, this.colour));
         entities.push(new Firework_particle(this.x, this.y, 3 * Math.PI / 2, this.colour));
-        entities.push(new Firework_particle(this.x, this.y, 7 * Math.PI / 4, this.colour));
+        entities.push(new Firework_particle(this.x, this.y, 7 * Math.PI / 4, this.colour)); */
+        
+        explosion_angles[this.explosion_size].forEach((s) => {
+            entities.push(new Firework_particle(this.x, this.y, s, this.colour, this.explosion_size));
+        });
     };
 }
 
 //after the firework blows itself to pieces
-function Firework_particle(x, y, a, colour) {
+function Firework_particle(x, y, a, colour, size) {
     this.x = x;
     this.y = y;
     this.r = 4;
@@ -216,7 +232,24 @@ function Firework_particle(x, y, a, colour) {
     
     this.colour = colour;
     
-    this.max_lifetime = 500;
+    this.max_lifetime = (function(s) {
+        switch (s) {
+            case "small":
+                return 125;
+                break;
+            case "medium":
+                return 250;
+                break;
+            case "large":
+                return 375;
+                break;
+            case "extra large":
+                return 500;
+                break;
+            default:
+                return 400;
+        }
+    })(size);
     
     this.lifetime = 0;
     this.active   = true;
