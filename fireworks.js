@@ -17,7 +17,7 @@ addEventListener("touchstart", (e) => {
     if (y <= bottom_limit) {
         return;
     } else {
-        entities.push(new Firework_rocket(x, y, user_colour));
+        entities.push(new Firework_rocket(x, y, touch_colour));
     }
 });
 
@@ -28,7 +28,7 @@ addEventListener("mousedown", (e) => {
     if (y <= bottom_limit) {
         return;
     } else {
-        entities.push(new Firework_rocket(x, y, user_colour));
+        entities.push(new Firework_rocket(x, y, click_colour));
     }
 });
 
@@ -127,7 +127,8 @@ var firework_colours = [
     {r: 220, g: 220, b: 220}, //gainsboro
     {r: 192, g: 192, b: 192}, //silver
 ];
-var user_colour = {r: 240, g: 230, b: 130}; //khaki
+var click_colour = {r: 240, g: 230, b: 130}; //khaki
+var touch_colour = {r: 102, g: 205, b: 170}; //mediumaquamarine
 
 
 var explosion_sizes = ["small", "medium", "large", "extra large"];
@@ -204,16 +205,6 @@ function Firework_rocket(x, y, colour) {
     };
     
     this.explode = () => {
-        /*
-        entities.push(new Firework_particle(this.x, this.y, 0, this.colour));
-        entities.push(new Firework_particle(this.x, this.y, Math.PI / 4, this.colour));
-        entities.push(new Firework_particle(this.x, this.y, Math.PI / 2, this.colour));
-        entities.push(new Firework_particle(this.x, this.y, 3 * Math.PI / 4, this.colour));
-        entities.push(new Firework_particle(this.x, this.y, Math.PI, this.colour));
-        entities.push(new Firework_particle(this.x, this.y, 5 * Math.PI / 4, this.colour));
-        entities.push(new Firework_particle(this.x, this.y, 3 * Math.PI / 2, this.colour));
-        entities.push(new Firework_particle(this.x, this.y, 7 * Math.PI / 4, this.colour)); */
-        
         explosion_angles[this.explosion_size].forEach((s) => {
             entities.push(new Firework_particle(this.x, this.y, s, this.colour, this.explosion_size));
         });
